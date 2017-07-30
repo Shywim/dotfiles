@@ -1,0 +1,49 @@
+#!/bin/sh
+
+AVAILABLE_DIR="/etc/nginx/sites-available/"
+ENABLED_DIR="/etc/nginx/sites-enabled/"
+SUDO="sudo"
+
+print_help () {
+	echo "nginxctl USAGE"
+	echo ""
+	echo "nginxctl enable <server_name>"
+	echo "    Symlink a server block from \$AVAILABLE_DIR to \$ENABLED_DIR"
+	echo ""
+	echo "nginxctl disable <server_name>"
+	echo "    Remove a symlink in \$ENABLED_DIR"
+	echo ""
+	echo "<server_name> MUST be an existing file in either of the directories"
+}
+
+check_file () {
+	if [ ! -e "$1" ]; then
+		echo "$1 does not exist"
+		exit 2
+	fi
+}
+
+if [ "$#" -ne 2 ]; then
+	echo "Wrong number of arguments"
+	echo ""
+	print_help
+	exit 1
+fi
+
+if [ "$1" = "enable" ]; then
+	file="$AVAILABLE_DIR$2"
+	check_file $file
+	"$SUDO" ln -s "$file" "$ENABLED_DIR"
+	exit
+elif [ "$1" = "disable" ]; then
+	file="$ENABLED_DIR$2"
+	check_file $file
+	"$SUDO" rm "$file"
+	exit
+else
+	echo "$1 is not a valid command"
+	echo ""
+	print_help
+	exit 1
+fi
+
