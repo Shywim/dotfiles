@@ -1,0 +1,7 @@
+fpath+=($XDG_DATA_HOME/zsh/pure)
+
+autoload -U promptinit; promptinit
+prompt pure
+
+. /opt/homebrew/opt/asdf/libexec/asdf.sh
+

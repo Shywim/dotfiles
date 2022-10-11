@@ -1,0 +1,4 @@
+export XDG_DATA_HOME=$HOME/.local/share
+
+# Set PATH, MANPATH, etc., for Homebrew.
+eval "$(/opt/homebrew/bin/brew shellenv)"

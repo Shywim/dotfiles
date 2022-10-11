@@ -1,0 +1,5 @@
+[user]
+	name = Matthieu Harlé
+	email = bonjour@matthieuharle.com
+[init]
+	defaultBranch = main
