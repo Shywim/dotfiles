@@ -1,4 +1,12 @@
 export XDG_DATA_HOME=$HOME/.local/share
 
+source $HOME/.zprofile_sec
+
 # Set PATH, MANPATH, etc., for Homebrew.
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
+
+# Added by Toolbox App
+export PATH="$PATH:/Users/matthieu/Library/Application Support/JetBrains/Toolbox/scripts"
+
+export EDITOR=hx

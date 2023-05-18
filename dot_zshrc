@@ -1,7 +1,98 @@
 fpath+=($XDG_DATA_HOME/zsh/pure)
 
 autoload -U promptinit; promptinit
-prompt pure
+#prompt pure
 
-. /opt/homebrew/opt/asdf/libexec/asdf.sh
+eval "$(starship init zsh)"
+
+source $HOME/.profile
+
+setopt share_history
+
+. $HOME/.asdf/asdf.sh
+
+# append completions to fpath
+fpath=(${ASDF_DIR}/completions $fpath)
+# initialise completions with ZSH's compinit
+autoload -Uz compinit && compinit
+
+
+#alias tf='nerdctl run --rm -it --platform linux/amd64 \
+alias tf='docker run --rm -it --platform linux/amd64 \
+	-e TF_VAR_gitlab_token="$TF_VAR_gitlab_token" \
+  -v `pwd`:/workspace \
+  -v "$HOME/.aws:/root/.aws:ro" \
+  -v "$HOME/.config/gcloud:/root/.config/gcloud:ro" \
+  -v "$HOME/.kube/config:/root/.kube/config:ro" \
+  -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
+  -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
+  -e "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" \
+  -w /workspace \
+  terraform'
+
+aws_creds() {
+  local profile="${1:-${AWS_PROFILE}}"
+  local account_id="$(aws configure get sso_account_id --profile "${profile}")" \
+  role_name="$(aws configure get sso_role_name --profile "${profile}")" \
+  region="$(aws configure get region --profile "${profile}")" \
+  start_url="$(aws configure get sso_start_url --profile "${profile}")"
+
+  if [ -z "$start_url" ] ; then
+    echo "did not find sso_start_url in profile ${profile}"
+    exit 1
+  fi
+
+  local cache_file="${HOME}/.aws/sso/cache/$(echo -n "$start_url" | sha1sum | awk '{print $1}').json"
+
+  if [ ! -f "$cache_file" ] ; then
+    echo "sso creds not found. are you logged into AWS SSO?"
+    echo ;
+    echo "aws sso login --profile \"${profile}\""
+    exit 1
+  fi
+
+  local access_token=$(jq -r .accessToken "${cache_file}")
+
+  aws sso get-role-credentials \
+    --account-id "${account_id}" \
+    --role-name "${role_name}" \
+    --region "${region:-us-east-1}" \
+    --access-token "${access_token}" \
+    --no-sign-request \
+    --output json \
+    | jq -r '.roleCredentials |
+      {
+      "AWS_ACCESS_KEY_ID": .accessKeyId,
+      "AWS_SECRET_ACCESS_KEY": .secretAccessKey,
+      "AWS_SESSION_TOKEN": .sessionToken,
+      "AWS_CREDENTIALS_EXPIRATION": (.expiration / 1000 | todate)
+      } | keys[] as $k | "export \($k)=\(.[$k])"'
+}
+
+aws_reset_env() {
+  unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_CREDENTIALS_EXPIRATION
+}
+
+alias lf="cd $HOME/Projects/lafourche"
+
+export PATH=$HOME/Library/Android/sdk/emulator:$PATH
+export PATH=$HOME/.bun/bin:$PATH
+
+alias kubesec='docker run --rm --platform linux/amd64 \
+  -v "$HOME/.aws:/root/.aws:ro" \
+  -v "$HOME/.config/gcloud:/root/.config/gcloud:ro" \
+  -v "$HOME/.kube/config:/root/.kube/config:ro" \
+  -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
+  -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
+  -e "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" \
+	-v `pwd`:/workspace \
+	kubesec'
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)
+
+source $HOME/.aliases_git
+#source /opt/homebrew/opt/spaceship/spaceship.zsh
+
+
+# Must stay at the end
+source $XDG_DATA_HOME/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
