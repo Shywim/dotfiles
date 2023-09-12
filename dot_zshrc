@@ -1,3 +1,19 @@
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000000
+SAVEHIST=10000000
+setopt BANG_HIST                 # Treat the '!' character specially during expansion.
+setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
+setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
+setopt SHARE_HISTORY             # Share history between all sessions.
+setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
+setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
+setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
+setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
+setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
+setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
+setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
+setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
+setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 fpath+=($XDG_DATA_HOME/zsh/pure)
 
 autoload -U promptinit; promptinit
@@ -24,6 +40,7 @@ alias tf='docker run --rm -it --platform linux/amd64 \
   -v "$HOME/.aws:/root/.aws:ro" \
   -v "$HOME/.config/gcloud:/root/.config/gcloud:ro" \
   -v "$HOME/.kube/config:/root/.kube/config:ro" \
+  -e "AWS_PROFILE=$AWS_PROFILE" \
   -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
   -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
   -e "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" \
@@ -82,6 +99,7 @@ alias kubesec='docker run --rm --platform linux/amd64 \
   -v "$HOME/.aws:/root/.aws:ro" \
   -v "$HOME/.config/gcloud:/root/.config/gcloud:ro" \
   -v "$HOME/.kube/config:/root/.kube/config:ro" \
+  -e "AWS_PROFILE=$AWS_PROFILE" \
   -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
   -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
   -e "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" \
@@ -89,10 +107,47 @@ alias kubesec='docker run --rm --platform linux/amd64 \
 	kubesec'
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 
+alias ls='exa --icons'
+alias lsa='exa -la --icons'
 source $HOME/.aliases_git
+source $HOME/.aliases_lf
 #source /opt/homebrew/opt/spaceship/spaceship.zsh
 
+# bun completions
+[ -s "/Users/matthieu/.bun/_bun" ] && source "/Users/matthieu/.bun/_bun"
+
+alacritty-theme() {
+  theme=$1
+
+  if [ ! -f ~/.config/alacritty/colors.yml ]; then
+    echo "file ~/.config/alacritty/colors.yml doesn't exist"
+    exit 1
+  fi
+
+  # sed doesn't like symlinks, get the absolute path
+  config_path=$(realpath ~/.config/alacritty/colors.yml)
+
+  sed -i "" -e "s#^colors: \*.*#colors: *$theme#g" $config_path
+
+  echo "switched to $theme."
+}
+
+helix-theme() {
+  theme=$1
+  config_path="~/.config/helix/config.toml"
+
+  if [ ! -f "$config_path" ]; then
+    echo "file $config_path doesn't exist"
+    exit 1
+  fi
+
+  # sed doesn't like symlinks, get the absolute path
+  config_path=$(realpath "$config_path")
+
+  sed -i "" -e "s#^theme: \".*\"#theme: \"$theme\"#g" "$config_path"
+
+  echo "switched to $theme."
+}
 
 # Must stay at the end
 source $XDG_DATA_HOME/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-

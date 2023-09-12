@@ -1,0 +1,3 @@
+alias fwd-temporal='kubectl port-forward -n temporal deployment/temporal-frontend 7233:7233'
+alias fwd-dbprod='kubectl external-forward 5432:production-oms.cjeelmlxjwqv.eu-west-3.rds.amazonaws.com:5432'
+alias lf-sso='aws sso login --profile dev-prod-BTG'
